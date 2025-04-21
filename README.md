@@ -6,7 +6,7 @@ Este projeto realiza uma avaliação comparativa de desempenho entre os protocol
 - Testes de carga com **k6**
 - Análise de resultados com **pandas**
 
-## Autores
+## 👤 Autores
 - [Carllos-Mendes](https://github.com/Carllos-Mendes)
 
 - [Erysimn](https://github.com/Erysimn)
