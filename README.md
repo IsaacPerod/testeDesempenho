@@ -24,6 +24,7 @@ Para executar o projeto, instale as dependências listadas abaixo.
 As instruções são voltadas para **Windows**, mas podem ser adaptadas para outros sistemas operacionais.  
 O projeto foi testado no ambiente **Windows com VS Code e PowerShell**.
 
+----------------------------------
 
 ## 🐍 Guia de Instalação do Python
 
@@ -131,6 +132,8 @@ O k6 é utilizado para realizar os testes de carga e comparar o desempenho entre
    ```
 **Esperado:** k6 v0.54.0 (ou similar).
 
+----------------------------------
+
 ## 📂 Estrutura do Projeto
 
 Certifique-se de que o diretório do projeto contenha a seguinte estrutura de arquivos:
@@ -163,6 +166,8 @@ fsutil file createnew files\100mb.bin 104857600
 ```
 ### 📝 Certificados:
 Gere os certificados cert.pem e key.pem com o OpenSSL (como descrito acima).
+
+----------------------------------
 
 ## 🏃 Como Executar
 
@@ -200,6 +205,8 @@ Para melhorar a taxa de sucesso no k6 (atualmente 38% para HTTP/1.1), você pode
 ```powershell
 gunicorn --workers 4 server_http1:app
 ```
+
+----------------------------------
 
 ## 🛠️ Notas de Depuração
 
