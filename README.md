@@ -103,36 +103,10 @@ O OpenSSL é necessário para gerar os certificados (`cert.pem`, `key.pem`) usad
 
 No diretório do projeto, gere os certificados:
 ```powershell
-cd C:\Faculdade\Redes\testeDesempenho # Substitua pelo seu caminho
+cd C:\Faculdade\Redes\testeDesempenho
 openssl req -x509 -newkey rsa:2048 -nodes -sha256 -keyout key.pem -out cert.pem -days 365 -subj "/CN=localhost"
 ```
 
-## 🚀 k6
-
-O k6 é utilizado para realizar os testes de carga e comparar o desempenho entre **HTTP/3** e **HTTP/1.1**.
-
-### 📥 Versão recomendada:
-- **v0.54.0** (ou mais recente)
-
-### ⚙️ Instalação:
-
-1. Baixe o executável para **Windows 64-bit**:
-   - [k6 Downloads](https://k6.io/docs/getting-started/installation/)
-
-2. Mova o arquivo `k6.exe` para **C:\Program Files\k6\k6.exe**.
-
-3. **Adicione ao PATH**:
-   ```powershell
-   $env:Path += ";C:\Program Files\k6"
-   setx PATH "$env:Path;C:\Program Files\k6"
-   
-4. Verifique a instalação:
-   ```powershell
-   k6 version
-   ```
-**Esperado:** k6 v0.54.0 (ou similar).
-
-----------------------------------
 
 ## 📂 Estrutura do Projeto
 
@@ -227,9 +201,3 @@ netsh advfirewall firewall add rule name="Allow UDP 4433" dir=in action=allow pr
 
 3. Adicione logs detalhados ao server_http3.py (nível DEBUG) para diagnosticar o problema.
 
-#### 🚫 k6 com 0% de Sucesso no HTTP/3:
-1. Certifique-se de que o server_http3.py está rodando e acessível em localhost:4433:
-   ```powershell
-   netstat -ano | findstr :4433
-   ```
-2. Se precisar de ajuda com erros, compartilhe os logs dos servidores e clientes.
