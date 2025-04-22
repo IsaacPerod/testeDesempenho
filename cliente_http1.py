@@ -2,6 +2,7 @@ import httpx
 import time
 import asyncio
 import argparse
+import json  # Adicionado para salvar os resultados
 
 async def make_request(client, endpoint):
     start_time = time.perf_counter()
@@ -16,7 +17,8 @@ async def make_request(client, endpoint):
     }
 
 async def main(host="127.0.0.1", port=5000):
-    endpoints = ["/", "/json", "/file/1mb", "/file/10mb", "/file/100mb"]
+    endpoints = ["/", "/json", "/file/1mb"]
+    results = []  # Lista para armazenar os resultados
     async with httpx.AsyncClient() as client:
         for endpoint in endpoints:
             try:
@@ -26,8 +28,21 @@ async def main(host="127.0.0.1", port=5000):
                 print(f"⏱ Latência: {result['latency']:.3f} segundos")
                 print(f"📏 Tamanho: {result['content_length']} bytes")
                 print(f"📜 Conteúdo (primeiros 100 bytes): {result['content']}\n")
+                
+                # Adiciona o resultado à lista
+                results.append({
+                    "type": "Point",
+                    "metrics": {"http_req_duration": result["latency"] * 1000},  # Converte para ms
+                    "url": f"http://{host}:{port}{result['endpoint']}"
+                })
             except Exception as e:
                 print(f"❌ Erro ao acessar {endpoint}: {e}\n")
+    
+    # Salva os resultados em um arquivo JSON
+    with open("results_http1.json", "w", encoding="utf-8") as f:
+        for result in results:
+            f.write(json.dumps(result) + "\n")
+    print("✅ Resultados salvos em 'results_http1.json'")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

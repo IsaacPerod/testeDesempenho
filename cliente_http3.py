@@ -2,6 +2,7 @@ import asyncio
 import ssl
 import logging
 import time
+import json
 from aioquic.asyncio.client import connect
 from aioquic.asyncio.protocol import QuicConnectionProtocol
 from aioquic.h3.connection import H3Connection
@@ -95,6 +96,8 @@ async def make_request(client, h3_conn, endpoint):
         logging.error(f"Erro ao enviar requisição para {endpoint}: {e}")
         raise
 
+import json  # Adicione esta importação
+
 async def main(host="localhost", port=4433):
     print(f"Tentando conectar a {host}:{port}")
     config = QuicConfiguration(is_client=True, alpn_protocols=["h3"])
@@ -102,6 +105,7 @@ async def main(host="localhost", port=4433):
     logging.info("Configuração do cliente carregada")
 
     client = None
+    resultados = []  # Lista para armazenar os resultados
     try:
         async with connect(host, port, configuration=config, create_protocol=QuicClientProtocol) as client:
             if not isinstance(client, QuicClientProtocol):
@@ -110,7 +114,7 @@ async def main(host="localhost", port=4433):
             h3_conn = client._http
             if h3_conn is None:
                 raise ConnectionError("Falha na negociação do protocolo HTTP/3")
-            endpoints = ["/"]
+            endpoints = ["/", "/json", "/file/1mb.bin"]
             for endpoint in endpoints:
                 if client._closed:
                     logging.error("Conexão fechada, interrompendo requisições")
@@ -125,6 +129,15 @@ async def main(host="localhost", port=4433):
                     print(f"📦 Status: {result['status']}")
                     print(f"📏 Tamanho: {result['content_length']} bytes")
                     print(f"📜 Conteúdo (primeiros 100 bytes): {result['content']}\n")
+                    
+                    # Adiciona o resultado à lista
+                    resultados.append({
+                        "endpoint": result['endpoint'],
+                        "status": result['status'],
+                        "content_length": result['content_length'],
+                        "content": result['content'],
+                        "elapsed_time": elapsed_time
+                    })
                 except ConnectionError as e:
                     logging.error(f"Erro ao acessar {endpoint}: {e}")
                     break
@@ -146,6 +159,11 @@ async def main(host="localhost", port=4433):
             except Exception as e:
                 logging.error(f"Erro inesperado ao fechar conexão: {e}")
         logging.info("Encerrando cliente")
+        
+        # Salva os resultados em um arquivo JSON
+        with open("results_http3.json", "w", encoding="utf-8") as f:
+            json.dump(resultados, f, ensure_ascii=False, indent=4)
+        logging.info("Resultados salvos em 'results_http3.json'")
 
 if __name__ == "__main__":
     import argparse

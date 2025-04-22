@@ -1,0 +1,23 @@
+[
+    {
+        "endpoint": "/",
+        "status": 200,
+        "content_length": 21,
+        "content": "\"Response via HTTP/3\"",
+        "elapsed_time": 0.021359899999879417
+    },
+    {
+        "endpoint": "/json",
+        "status": 200,
+        "content_length": 27,
+        "content": "{\"message\":\"Hello, World!\"}",
+        "elapsed_time": 0.028550400000312948
+    },
+    {
+        "endpoint": "/file/1mb.bin",
+        "status": 200,
+        "content_length": 6291458,
+        "content": "\"\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0",
+        "elapsed_time": 10.50179960000014
+    }
+]

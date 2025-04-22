@@ -1,0 +1,47 @@
+📊 Estatísticas Gerais de Latência (em ms):
+count        8.000000
+mean      1358.326537
+std       3695.555459
+min          3.143700
+25%          8.694525
+50%         24.955150
+75%         89.385600
+max      10501.799600
+Name: http_req_duration, dtype: float64
+
+📈 Estatísticas de Latência por Protocolo:
+          count         mean          std      min       25%      50%        75%         max
+protocol                                                                                    
+HTTP/1.1    5.0    62.980480   113.379867   3.1437   6.60660   9.3905    30.8904    264.8712
+HTTP/3      3.0  3517.236633  6048.810032  21.3599  24.95515  28.5504  5265.1750  10501.7996
+
+📈 Estatísticas de Latência por Endpoint:
+                        count        mean  std         min         25%         50%         75%         max
+protocol endpoint                                                                                         
+HTTP/1.1 /                1.0      9.3905  NaN      9.3905      9.3905      9.3905      9.3905      9.3905
+         /file/100mb      1.0    264.8712  NaN    264.8712    264.8712    264.8712    264.8712    264.8712
+         /file/10mb       1.0     30.8904  NaN     30.8904     30.8904     30.8904     30.8904     30.8904
+         /file/1mb.bin    1.0      6.6066  NaN      6.6066      6.6066      6.6066      6.6066      6.6066
+         /json            1.0      3.1437  NaN      3.1437      3.1437      3.1437      3.1437      3.1437
+HTTP/3   /                1.0     21.3599  NaN     21.3599     21.3599     21.3599     21.3599     21.3599
+         /file/1mb.bin    1.0  10501.7996  NaN  10501.7996  10501.7996  10501.7996  10501.7996  10501.7996
+         /json            1.0     28.5504  NaN     28.5504     28.5504     28.5504     28.5504     28.5504
+
+📊 Comparação de Latência entre HTTP/1.1 e HTTP/3:
+HTTP/1.1 Média de Latência: 62.98 ms
+HTTP/3 Média de Latência: 3517.24 ms
+🔍 Diferença Média: -3454.26 ms
+
+📊 Comparação de Latência por Endpoint entre HTTP/1.1 e HTTP/3:
+Endpoint /:
+  HTTP/1.1: 9.39 ms
+  HTTP/3: 21.36 ms
+  Diferença: -11.97 ms
+Endpoint /json:
+  HTTP/1.1: 3.14 ms
+  HTTP/3: 28.55 ms
+  Diferença: -25.41 ms
+Endpoint /file/1mb.bin:
+  HTTP/1.1: 6.61 ms
+  HTTP/3: 10501.80 ms
+  Diferença: -10495.19 ms

@@ -1,0 +1,7 @@
+[
+    {"type": "Point", "metrics": {"http_req_duration": 9.390499999881285}, "url": "http://127.0.0.1:5000/"},
+    {"type": "Point", "metrics": {"http_req_duration": 3.143699999782257}, "url": "http://127.0.0.1:5000/json"},
+    {"type": "Point", "metrics": {"http_req_duration": 6.606599999940954}, "url": "http://127.0.0.1:5000/file/1mb"},
+    {"type": "Point", "metrics": {"http_req_duration": 30.890399999861984}, "url": "http://127.0.0.1:5000/file/10mb"},
+    {"type": "Point", "metrics": {"http_req_duration": 264.87120000001596}, "url": "http://127.0.0.1:5000/file/100mb"}
+  ]
