@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import os
 
 app = FastAPI()
 
@@ -12,7 +13,6 @@ async def json():
 
 @app.get("/file/{size}")
 async def file(size: str):
-    import os
     sizes = {"1mb.bin": "1mb.bin", "10mb.bin": "10mb.bin", "100mb.bin": "100mb.bin"}
     if size in sizes:
         file_path = os.path.join("files", sizes[size])
