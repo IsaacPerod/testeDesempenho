@@ -107,7 +107,6 @@ cd C:\Faculdade\Redes\testeDesempenho
 openssl req -x509 -newkey rsa:2048 -nodes -sha256 -keyout key.pem -out cert.pem -days 365 -subj "/CN=localhost"
 ```
 
-
 ## 📂 Estrutura do Projeto
 
 Certifique-se de que o diretório do projeto contenha a seguinte estrutura de arquivos:
