@@ -3,20 +3,14 @@
 Este projeto realiza uma avaliação comparativa de desempenho entre os protocolos **HTTP/3** e **HTTP/1.1**, utilizando:
 
 - Servidores e clientes em **Python**
-- Testes de carga com **k6**
-- Análise de resultados com **pandas**
+- Análise de resultados com **matplotlib**
 
 ## 👤 Autores
 - [Carllos-Mendes](https://github.com/Carllos-Mendes)
-
-- [Erysimn](https://github.com/Erysimn)
-
+- [Daniel](https://github.com/Erysimn)
 - [liviavbarbosa](https://github.com/liviavbarbosa)
-
 - [LuizaVelasque](https://github.com/LuizaVelasque)
-
 - [IsaacPerod](https://github.com/IsaacPerod)
-  
 
 ## ⚙️ Requisitos e Ambiente
 
@@ -37,22 +31,21 @@ O projeto foi testado no ambiente **Windows com VS Code e PowerShell**.
   Durante a instalação, marque a opção `Add Python to PATH`.
 
 - **Verificação:**
-  ```bash
+  ```powershell
   python --version
-  
-**Esperado:** Python 3.10.9
+  ```
+  **Esperado:** Python 3.10.9
 
 ⚠️ Se você estiver usando Python 3.13.1, mude para 3.10.9 caso ocorra erro como ConnectionError.
 
 ## 📦 Pacotes Python Utilizados
 
-- `aioquic==0.9.25`: Suporte ao HTTP/3 e QUIC (usado em `server_http3.py` e `cliente_http3.py`)
+- `aioquic==0.9.25`: Suporte ao HTTP/3 e QUIC (`http3/server_http3.py` e `http3/cliente_http3.py`)
 - `cryptography`: Manipulação de certificados
 - `pyOpenSSL`: Suporte a SSL/TLS
-- `flask`: Servidor HTTP/1.1 (`server_http1.py`)
-- `requests`: Cliente HTTP/1.1 (`cliente_http1.py`)
-- `pandas`: Análise de resultados (`analyze.py`)
-- *(Opcional)* `gunicorn`: Melhora a taxa de sucesso do HTTP/1.1 no k6
+- `flask`: Servidor HTTP/1.1 (`http1.1/server_http1.py`)
+- `httpx`: Cliente HTTP/1.1 (`http1.1/cliente_http1.py`)
+- `matplotlib`: Análise de resultados (`analyze.py`)
 
 ### ✅ Instalação dos Pacotes
 
@@ -63,16 +56,12 @@ O projeto foi testado no ambiente **Windows com VS Code e PowerShell**.
    ```
 2. **Instale os pacotes necessários:**
    ```powershell
-   pip install aioquic==0.9.25 cryptography pyOpenSSL flask requests pandas
-   ```
-3. ***(Opcional para HTTP/1.1): Para melhorar a taxa de sucesso do HTTP/1.1:***
-   ```powershell
-   pip install gunicorn
+   pip install aioquic==0.9.25 cryptography pyOpenSSL flask httpx matplotlib
    ```
 
 ## 🔑 OpenSSL
 
-O OpenSSL é necessário para gerar os certificados (`cert.pem`, `key.pem`) usados pelo servidor HTTP/3.
+O OpenSSL é necessário para gerar os certificados (`cert.pem`, `key.pem`) usados pelos servidores.
 
 ### 📥 Versão:
 - **Win64 OpenSSL v3.2.3 Light** (ou mais recente)
@@ -97,7 +86,7 @@ O OpenSSL é necessário para gerar os certificados (`cert.pem`, `key.pem`) usad
    ```powershell
    openssl version
    ```
-**Esperado:** OpenSSL 3.2.3 10 Oct 2024 (ou similar).
+   **Esperado:** OpenSSL 3.2.3 10 Oct 2024 (ou similar).
 
 ### 📝 Gerar Certificados
 
@@ -112,31 +101,50 @@ openssl req -x509 -newkey rsa:2048 -nodes -sha256 -keyout key.pem -out cert.pem 
 Certifique-se de que o diretório do projeto contenha a seguinte estrutura de arquivos:
 
 ```plaintext
-C:\Faculdade\Redes\testeDesempenho\ # Substitua pelo seu caminho
-├── files\
-│   ├── 1mb.bin
-│   ├── 10mb.bin
-│   ├── 100mb.bin
+C:\Faculdade\Redes\testeDesempenho\
+├── workloads\
+│   ├── web\
+│   │   ├── 10kb.html
+│   │   ├── 25kb.html
+│   │   └── 50kb.html
+│   ├── audio\
+│   │   ├── 1mb.mp3
+│   │   ├── 3mb.mp3
+│   │   └── 5mb.mp3
+│   └── video\
+│       ├── 20mb.mp4
+│       ├── 35mb.mp4
+│       └── 50mb.mp4
 ├── cert.pem
 ├── key.pem
-├── server_http1.py
-├── server_http3.py
-├── cliente_http1.py
-├── cliente_http3.py
-├── load-test.js
+├── http1.1\
+│   ├── server_http1.py
+│   ├── cliente_http1.py
+│   └── results_http1.json
+├── http3\
+│   ├── server_http3.py
+│   ├── cliente_http3.py
+│   └── results_http3.json
 ├── analyze.py
-├── results.json
+├── results\
+│   └── (arquivos de análise gerados)
 ```
 
 ### 📝 Arquivos de Teste:
-Crie os arquivos 1mb.bin, 10mb.bin e 100mb.bin se não existirem:
+Crie os arquivos de workload conforme necessário. Para arquivos binários de exemplo:
 ```powershell
 cd C:\Faculdade\Redes\testeDesempenho
-mkdir files
-fsutil file createnew files\1mb.bin 1048576
-fsutil file createnew files\10mb.bin 10485760
-fsutil file createnew files\100mb.bin 104857600
+mkdir workloads
+mkdir workloads\web workloads\audio workloads\video
+fsutil file createnew workloads\audio\1mb.mp3 1048576
+fsutil file createnew workloads\audio\3mb.mp3 3145728
+fsutil file createnew workloads\audio\5mb.mp3 5242880
+fsutil file createnew workloads\video\20mb.mp4 20971520
+fsutil file createnew workloads\video\35mb.mp4 36700160
+fsutil file createnew workloads\video\50mb.mp4 52428800
 ```
+Crie os arquivos HTML manualmente ou usando scripts.
+
 ### 📝 Certificados:
 Gere os certificados cert.pem e key.pem com o OpenSSL (como descrito acima).
 
@@ -146,37 +154,26 @@ Gere os certificados cert.pem e key.pem com o OpenSSL (como descrito acima).
 
 ### 1. Configurar o Ambiente:
 
-- Instale o **Python 3.10.9**, os pacotes Python, o **OpenSSL** e o **k6** conforme as instruções anteriores.
+- Instale o **Python 3.10.9**, os pacotes Python e o **OpenSSL** conforme as instruções anteriores.
 - Crie os arquivos de teste e os certificados.
 
 ### 2. Executar os Servidores:
 
 ```powershell
-python server_http1.py
-python server_http3.py
+python http1.1/server_http1.py
+python http3/server_http3.py
 ```
 
 ### 3. Executar os Clientes:
 
 ```powershell
-python cliente_http1.py
-python cliente_http3.py
+python http1.1/cliente_http1.py
+python http3/cliente_http3.py
 ```
 
-### 4. Executar Testes de Carga:
-```powershell
-& "C:\Program Files\k6\k6.exe" run load-test.js --out json=results.json --console-output
-```
-
-### 5. Analisar os Resultados:
+### 4. Analisar os Resultados:
 ```powershell
 python analyze.py
-```
-
-### *6. (Opcional) Melhorar o HTTP/1.1:*
-Para melhorar a taxa de sucesso no k6 (atualmente 38% para HTTP/1.1), você pode usar o gunicorn:
-```powershell
-gunicorn --workers 4 server_http1:app
 ```
 
 ----------------------------------
@@ -185,7 +182,7 @@ gunicorn --workers 4 server_http1:app
 
 ### 🔥 Firewall:
 
-O HTTP/3 utiliza **QUIC (UDP)** na porta **4433**. Certifique-se de liberar a porta no firewall:
+O HTTP/3 utiliza **QUIC (UDP)** na porta **4433**. Certifique-se de liberar a no firewall:
 
 ```powershell
 netsh advfirewall firewall add rule name="Allow UDP 4433" dir=in action=allow protocol=UDP localport=4433
@@ -197,6 +194,3 @@ netsh advfirewall firewall add rule name="Allow UDP 4433" dir=in action=allow pr
    openssl x509 -in cert.pem -text -noout
    ```
 2. **Dica:** Use Python 3.10.9 se houver problemas com aioquic no Python 3.13.1.
-
-3. Adicione logs detalhados ao server_http3.py (nível DEBUG) para diagnosticar o problema.
-

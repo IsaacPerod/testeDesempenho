@@ -1,95 +1,115 @@
-import pandas as pd
 import json
-import sys
-from contextlib import redirect_stdout
+import csv
+import os
+from statistics import mean, stdev
+import matplotlib.pyplot as plt
 
-def analyze_results(http1_file="results_http1.json", http3_file="results_http3.json", output_file="analysis_results.txt"):
+RESULTS_DIR = "results"
+
+def load_results(file_path):
     try:
-        # Carregar dados HTTP/1.1
-        with open(http1_file, "r", encoding="utf-8") as f1:
-            http1_data = json.load(f1)  # Carregar como um único JSON
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        # Padroniza o campo de latência para "latency"
+        for item in data:
+            if "elapsed_time" in item:
+                item["latency"] = item.pop("elapsed_time")
+        return data
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f"Erro ao carregar {file_path}")
+        return []
 
-        # Carregar dados HTTP/3
-        with open(http3_file, "r", encoding="utf-8") as f3:
-            http3_data = json.load(f3)  # Carregar como um único JSON
+def analyze_comparison(
+    http1_file=os.path.join("http1.1", "results_http1.json"),
+    http3_file=os.path.join("http3", "results_http3.json")
+):
+    # Garante que a pasta results existe
+    os.makedirs(RESULTS_DIR, exist_ok=True)
 
-        # Processar métricas HTTP/1.1
-        http1_metrics = [
-            {
-                "http_req_duration": d["metrics"]["http_req_duration"],
-                "endpoint": d["url"].replace("http://127.0.0.1:5000", ""),  # Normalizar endpoint
-                "protocol": "HTTP/1.1"
-            }
-            for d in http1_data if d.get("type") == "Point" and "http_req_duration" in d.get("metrics", {})
-        ]
+    http1_results = load_results(http1_file)
+    http3_results = load_results(http3_file)
+    
+    if not http1_results or not http3_results:
+        print("Resultados não encontrados ou inválidos.")
+        return
 
-        # Processar métricas HTTP/3
-        http3_metrics = [
-            {
-                "http_req_duration": d["elapsed_time"] * 1000,  # Converter segundos para ms
-                "endpoint": d["endpoint"],
-                "protocol": "HTTP/3"
-            }
-            for d in http3_data if "elapsed_time" in d and "endpoint" in d
-        ]
+    # Organizar dados por endpoint e protocolo
+    all_data = {}
+    for protocol, results in [("http1", http1_results), ("http3", http3_results)]:
+        for item in results:
+            endpoint = item.get("endpoint")
+            if not endpoint:
+                continue
+            if endpoint not in all_data:
+                all_data[endpoint] = {}
+            if protocol not in all_data[endpoint]:
+                all_data[endpoint][protocol] = []
+            all_data[endpoint][protocol].append(item)
 
-        # Combinar os dados em um único DataFrame
-        combined_data = http1_metrics + http3_metrics
-        if not combined_data:
-            raise ValueError("Nenhum dado válido encontrado nos arquivos de resultados")
+    # Salvar todos os dados em JSON estruturado
+    with open(os.path.join(RESULTS_DIR, "analise_completa.json"), "w", encoding="utf-8") as f:
+        json.dump(all_data, f, indent=2, ensure_ascii=False)
+    print("Todos os dados salvos em results/analise_completa.json")
 
-        df = pd.DataFrame(combined_data)
+    # Salvar dados tabulares em CSV (um registro por endpoint/protocolo/execução)
+    with open(os.path.join(RESULTS_DIR, "analise_completa.csv"), "w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = ["endpoint", "protocolo", "latency", "status", "content_length"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for endpoint, protos in all_data.items():
+            for proto, items in protos.items():
+                for item in items:
+                    writer.writerow({
+                        "endpoint": endpoint,
+                        "protocolo": proto,
+                        "latency": item.get("latency"),
+                        "status": item.get("status"),
+                        "content_length": item.get("content_length"),
+                    })
+    print("Todos os dados salvos em results/analise_completa.csv")
 
-        # Normalizar endpoints para comparação
-        df["endpoint"] = df["endpoint"].replace({"/file/1mb": "/file/1mb.bin"})  # Corrigir inconsistência
+    # Salvar médias e desvios padrão por endpoint/protocolo
+    resumo = []
+    endpoints = sorted(all_data.keys())
+    for endpoint in endpoints:
+        for proto in ["http1", "http3"]:
+            items = all_data[endpoint].get(proto, [])
+            latencies = [item.get("latency") for item in items if item.get("latency") is not None]
+            if latencies:
+                resumo.append({
+                    "endpoint": endpoint,
+                    "protocolo": proto,
+                    "media_latency": mean(latencies),
+                    "desvio_latency": stdev(latencies) if len(latencies) > 1 else 0,
+                    "n_amostras": len(latencies)
+                })
+    with open(os.path.join(RESULTS_DIR, "analise_resumo.csv"), "w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = ["endpoint", "protocolo", "media_latency", "desvio_latency", "n_amostras"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in resumo:
+            writer.writerow(row)
+    print("Resumo estatístico salvo em results/analise_resumo.csv")
 
-        # Abrir arquivo para escrita
-        with open(output_file, "w", encoding="utf-8") as f:
-            # Redirecionar stdout para o arquivo (e manter console)
-            def print_to_file_and_console(*args, **kwargs):
-                print(*args, file=f, **kwargs)  # Escrever no arquivo
-                print(*args, **kwargs)  # Escrever no console
-
-            # Estatísticas gerais
-            print_to_file_and_console("📊 Estatísticas Gerais de Latência (em ms):")
-            print_to_file_and_console(df["http_req_duration"].describe())
-
-            # Estatísticas por protocolo
-            print_to_file_and_console("\n📈 Estatísticas de Latência por Protocolo:")
-            print_to_file_and_console(df.groupby("protocol")["http_req_duration"].describe())
-
-            # Estatísticas por endpoint
-            print_to_file_and_console("\n📈 Estatísticas de Latência por Endpoint:")
-            print_to_file_and_console(df.groupby(["protocol", "endpoint"])["http_req_duration"].describe())
-
-            # Comparação entre HTTP/1.1 e HTTP/3
-            print_to_file_and_console("\n📊 Comparação de Latência entre HTTP/1.1 e HTTP/3:")
-            http1_mean = df[df["protocol"] == "HTTP/1.1"]["http_req_duration"].mean()
-            http3_mean = df[df["protocol"] == "HTTP/3"]["http_req_duration"].mean()
-            print_to_file_and_console(f"HTTP/1.1 Média de Latência: {http1_mean:.2f} ms")
-            print_to_file_and_console(f"HTTP/3 Média de Latência: {http3_mean:.2f} ms")
-            print_to_file_and_console(f"🔍 Diferença Média: {http1_mean - http3_mean:.2f} ms")
-
-            # Comparação por endpoint
-            print_to_file_and_console("\n📊 Comparação de Latência por Endpoint entre HTTP/1.1 e HTTP/3:")
-            for endpoint in df["endpoint"].unique():
-                if endpoint in ["/file/10mb", "/file/100mb"]:
-                    continue  # Ignorar endpoints exclusivos do HTTP/1.1
-                http1_time = df[(df["protocol"] == "HTTP/1.1") & (df["endpoint"] == endpoint)]["http_req_duration"].mean()
-                http3_time = df[(df["protocol"] == "HTTP/3") & (df["endpoint"] == endpoint)]["http_req_duration"].mean()
-                print_to_file_and_console(f"Endpoint {endpoint}:")
-                print_to_file_and_console(f"  HTTP/1.1: {http1_time:.2f} ms")
-                print_to_file_and_console(f"  HTTP/3: {http3_time:.2f} ms")
-                print_to_file_and_console(f"  Diferença: {http1_time - http3_time:.2f} ms")
-
-        print(f"✅ Resultados salvos em {output_file}")
-
-    except FileNotFoundError as e:
-        print(f"❌ Arquivo não encontrado: {e.filename}")
-    except json.JSONDecodeError as e:
-        print(f"❌ Erro ao parsear JSON: {e}")
-    except Exception as e:
-        print(f"❌ Erro ao analisar os resultados: {e}")
+    # Gráfico de latência (linha)
+    plt.figure(figsize=(12, 6))
+    for protocol, color in [("http1", "#1f77b4"), ("http3", "#ff7f0e")]:
+        endpoints = sorted(all_data.keys())
+        latencies = []
+        for ep in endpoints:
+            items = all_data[ep].get(protocol, [])
+            vals = [item.get("latency") for item in items if item.get("latency") is not None]
+            latencies.append(mean(vals) if vals else 0)
+        plt.plot(endpoints, latencies, label=f"{protocol.upper()} Latência", color=color, marker='o')
+    plt.xlabel("Endpoint")
+    plt.ylabel("Latência Média (s)")
+    plt.title("Comparação de Latência: HTTP/1.1 vs HTTP/3")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(os.path.join(RESULTS_DIR, "grafico_latencia_linha.png"), dpi=200, bbox_inches="tight")
+    print("Gráfico salvo como results/grafico_latencia_linha.png")
+    plt.show()
 
 if __name__ == "__main__":
-    analyze_results()
+    analyze_comparison()

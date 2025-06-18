@@ -1,3 +1,0 @@
-{"type": "Point", "metrics": {"http_req_duration": 10.927899740636349}, "url": "http://127.0.0.1:5000/"}
-{"type": "Point", "metrics": {"http_req_duration": 2.6294002309441566}, "url": "http://127.0.0.1:5000/json"}
-{"type": "Point", "metrics": {"http_req_duration": 24.28459981456399}, "url": "http://127.0.0.1:5000/file/1mb"}
